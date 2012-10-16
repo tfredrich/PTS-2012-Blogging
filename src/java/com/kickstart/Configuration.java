@@ -5,10 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.kickstart.controller.OrderController;
-import com.kickstart.persistence.MongodbOrderRepository;
-import com.kickstart.persistence.OrderRepository;
-import com.kickstart.service.OrderService;
+import com.kickstart.controller.BlogController;
+import com.kickstart.controller.BlogEntryController;
+import com.kickstart.controller.CommentController;
+import com.kickstart.persistence.BlogEntryRepository;
+import com.kickstart.persistence.BlogRepository;
+import com.kickstart.persistence.CommentRepository;
+import com.kickstart.persistence.MongodbBlogEntryRepository;
+import com.kickstart.persistence.MongodbBlogRepository;
+import com.kickstart.persistence.MongodbCommentRepository;
+import com.kickstart.service.BlogEntryService;
+import com.kickstart.service.BlogService;
+import com.kickstart.service.CommentService;
 import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
 import com.strategicgains.restexpress.Format;
@@ -31,7 +39,9 @@ extends Environment
 	private String name;
 	private String defaultFormat;
 
-	private OrderController orderController;
+	private BlogController blogController;
+	private BlogEntryController blogEntryController;
+	private CommentController commentController;
 
 	@Override
 	protected void fillValues(Properties p)
@@ -74,9 +84,17 @@ extends Environment
 			}
 		}
 
-		OrderRepository orderRepository = new MongodbOrderRepository(mongo, dbName);
-		OrderService orderService = new OrderService(orderRepository);
-		orderController = new OrderController(orderService);
+		BlogRepository blogRepository = new MongodbBlogRepository(mongo, dbName);
+		BlogEntryRepository blogEntryRepository = new MongodbBlogEntryRepository(mongo, dbName);
+		CommentRepository commentRepository = new MongodbCommentRepository(mongo, dbName);
+		
+		BlogService blogService = new BlogService(blogRepository);
+		BlogEntryService blogEntryService = new BlogEntryService(blogEntryRepository);
+		CommentService commentService = new CommentService(commentRepository);
+		
+		blogController = new BlogController(blogService);
+		blogEntryController = new BlogEntryController(blogEntryService);
+		commentController = new CommentController(commentService);
 	}
 
 	/**
@@ -128,9 +146,19 @@ extends Environment
 	{
 		return name;
 	}
-
-	public OrderController getOrderController()
+	
+	public BlogController getBlogController()
 	{
-		return orderController;
+		return blogController;
+	}
+	
+	public BlogEntryController getBlogEntryController()
+	{
+		return blogEntryController;
+	}
+	
+	public CommentController getCommentController()
+	{
+		return commentController;
 	}
 }

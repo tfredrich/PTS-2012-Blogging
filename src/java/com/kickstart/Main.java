@@ -31,9 +31,9 @@ public class Main
 		    .setDefaultFormat(config.getDefaultFormat())
 		    .putResponseProcessor(Format.JSON, ResponseProcessors.json())
 		    .putResponseProcessor(Format.XML, ResponseProcessors.xml())
-//		    .putResponseProcessor(Format.WRAPPED_JSON, ResponseProcessors.wrappedJson())
-//		    .putResponseProcessor(Format.WRAPPED_XML, ResponseProcessors.wrappedXml())
-//		    .addPostprocessor(new LastModifiedHeaderPostprocessor())
+		    .putResponseProcessor(Format.WRAPPED_JSON, ResponseProcessors.wrappedJson())
+		    .putResponseProcessor(Format.WRAPPED_XML, ResponseProcessors.wrappedXml())
+		    .addPostprocessor(new LastModifiedHeaderPostprocessor())
 		    .addMessageObserver(new SimpleConsoleLogMessageObserver());
 
 		defineRoutes(config, server);
@@ -42,8 +42,8 @@ public class Main
 			.register(server)
 			.parameter(Parameters.Cache.MAX_AGE, 86400);	// Cache for 1 day (24 hours).
 
-//		new CacheControlPlugin()							// Support caching headers.
-//			.register(server);
+		new CacheControlPlugin()							// Support caching headers.
+			.register(server);
 
 		mapExceptions(server);
 		server.bind(config.getPort());
@@ -52,22 +52,33 @@ public class Main
 
 	private static void defineRoutes(Configuration config, RestExpress server)
 	{
-		// Maps /orders uri with optional format ('json' or 'xml'), accepting
-		// POST HTTP method to KickStartController.create(Request, Response)
-		// and the GET HTTP method to KickStartController.readAll(Request, Response).
-		server.uri("/orders.{format}", config.getOrderController())
-			.method(HttpMethod.POST)
-			.action("readAll", HttpMethod.GET);
+		server.uri("/blogs.{format}", config.getBlogController())
+			.action("readAll", HttpMethod.GET)
+			.method(HttpMethod.POST);
 
-		// Maps /orders uri with required orderId and optional format identifier
-		// to the KickStartService.  Accepts only GET, PUT, DELETE HTTP methods.
-		// Names this route to allow returning links from read resources in
-		// KickStartService methods via call to LinkUtils.asLinks().
-		server.uri("/orders/{orderId}.{format}", config.getOrderController())
+		server.uri("/blogs/{blogId}.{format}", config.getBlogController())
 			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
-			.name(Constants.KICKSTART_ORDER_URI);
-//			.parameter(Parameters.Cache.MAX_AGE, 3600);		// Cache for 3600 seconds (1 hour).
-//			.flag(Flags.Cache.DONT_CACHE);					// Expressly deny cache-ability.
+			.name(Constants.BLOG_READ_ROUTE);
+
+		server.uri("/blogs/{blogId}/entries.{format}", config.getBlogEntryController())
+//			.alias("/entries.{format}")
+			.action("readAll", HttpMethod.GET)
+			.method(HttpMethod.POST);
+
+		server.uri("/blogs/{blogId}/entries/{entryId}.{format}", config.getBlogEntryController())
+//			.alias("/entries/{entryId}.{format}")
+			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
+			.name(Constants.BLOG_ENTRY_READ_ROUTE);
+
+		server.uri("/blogs/{blogId}/entries/{entryId}/comments.{format}", config.getCommentController())
+//			.alias("/comments.{format}")
+			.action("readAll", HttpMethod.GET)
+			.method(HttpMethod.POST);
+
+		server.uri("/blogs/{blogId}/entries/{entryId}/comments/{commentId}.{format}", config.getCommentController())
+//			.alias("/comments/{commentId}.{format}")
+			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
+			.name(Constants.COMMENT_READ_ROUTE);
 	}
 
 	/**
