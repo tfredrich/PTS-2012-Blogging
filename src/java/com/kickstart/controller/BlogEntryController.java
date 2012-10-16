@@ -28,6 +28,8 @@ public class BlogEntryController
 	public String create(Request request, Response response)
 	{
 		BlogEntry blogEntry = request.getBodyAs(BlogEntry.class, "BlogEntry details not provided");
+		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID provided");
+		blogEntry.setBlogId(blogId);
 		BlogEntry saved = blogEntryService.create(blogEntry);
 
 		// Construct the response for create...
@@ -35,7 +37,8 @@ public class BlogEntryController
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.BLOG_ENTRY_ID_PARAMETER, locationUrl));
+		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.BLOG_ENTRY_ID_PARAMETER, locationUrl,
+				Constants.BLOG_ID_PARAMETER, blogId));
 
 		// Return the newly-created ID...
 		return saved.getId();
