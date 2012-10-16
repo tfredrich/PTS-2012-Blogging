@@ -8,6 +8,7 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 import com.kickstart.postprocessor.LastModifiedHeaderPostprocessor;
 import com.kickstart.serialization.ResponseProcessors;
 import com.strategicgains.repoexpress.exception.DuplicateItemException;
+import com.strategicgains.repoexpress.exception.InvalidObjectIdException;
 import com.strategicgains.repoexpress.exception.ItemNotFoundException;
 import com.strategicgains.restexpress.Format;
 import com.strategicgains.restexpress.Parameters;
@@ -61,22 +62,18 @@ public class Main
 			.name(Constants.BLOG_READ_ROUTE);
 
 		server.uri("/blogs/{blogId}/entries.{format}", config.getBlogEntryController())
-			.alias("/entries.{format}")
 			.action("readAll", HttpMethod.GET)
 			.method(HttpMethod.POST);
 
 		server.uri("/blogs/{blogId}/entries/{entryId}.{format}", config.getBlogEntryController())
-			.alias("/entries/{entryId}.{format}")
 			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
 			.name(Constants.BLOG_ENTRY_READ_ROUTE);
 
 		server.uri("/blogs/{blogId}/entries/{entryId}/comments.{format}", config.getCommentController())
-			.alias("/comments.{format}")
 			.action("readAll", HttpMethod.GET)
 			.method(HttpMethod.POST);
 
 		server.uri("/blogs/{blogId}/entries/{entryId}/comments/{commentId}.{format}", config.getCommentController())
-			.alias("/comments/{commentId}.{format}")
 			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
 			.name(Constants.COMMENT_READ_ROUTE);
 	}
@@ -89,7 +86,8 @@ public class Main
     	server
 	    	.mapException(ItemNotFoundException.class, NotFoundException.class)
 	    	.mapException(DuplicateItemException.class, ConflictException.class)
-	    	.mapException(ValidationException.class, BadRequestException.class);
+	    	.mapException(ValidationException.class, BadRequestException.class)
+	    	.mapException(InvalidObjectIdException.class, NotFoundException.class);
     }
 
 	private static Configuration loadEnvironment(String[] args)
