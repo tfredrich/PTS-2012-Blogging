@@ -28,6 +28,9 @@ public class CommentController
 	public String create(Request request, Response response)
 	{
 		Comment comment = request.getBodyAs(Comment.class, "Comment details not provided");
+		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "Blog ID not provided");
+		String blogEntryId = request.getUrlDecodedHeader(Constants.BLOG_ENTRY_ID_PARAMETER, "Blog Entry ID not provided");
+		comment.setBlogEntryId(blogEntryId);
 		Comment saved = commentService.create(comment);
 
 		// Construct the response for create...
@@ -35,7 +38,9 @@ public class CommentController
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.COMMENT_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.COMMENT_ID_PARAMETER, locationUrl));
+		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.COMMENT_ID_PARAMETER, locationUrl,
+				Constants.BLOG_ID_PARAMETER, blogId,
+				Constants.BLOG_ENTRY_ID_PARAMETER, blogEntryId));
 
 		// Return the newly-created ID...
 		return saved.getId();
