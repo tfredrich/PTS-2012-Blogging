@@ -8,17 +8,12 @@ import java.util.Properties;
 import com.kickstart.controller.BlogController;
 import com.kickstart.controller.BlogEntryController;
 import com.kickstart.controller.CommentController;
-import com.kickstart.persistence.BlogEntryRepository;
-import com.kickstart.persistence.BlogRepository;
-import com.kickstart.persistence.CommentRepository;
-import com.kickstart.persistence.MongodbBlogEntryRepository;
-import com.kickstart.persistence.MongodbBlogRepository;
-import com.kickstart.persistence.MongodbCommentRepository;
-import com.kickstart.service.BlogEntryService;
-import com.kickstart.service.BlogService;
-import com.kickstart.service.CommentService;
+import com.kickstart.domain.Blog;
+import com.kickstart.domain.BlogEntry;
+import com.kickstart.domain.Comment;
 import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
+import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Format;
 import com.strategicgains.restexpress.RestExpress;
 import com.strategicgains.restexpress.exception.ConfigurationException;
@@ -84,17 +79,13 @@ extends Environment
 			}
 		}
 
-		BlogRepository blogRepository = new MongodbBlogRepository(mongo, dbName);
-		BlogEntryRepository blogEntryRepository = new MongodbBlogEntryRepository(mongo, dbName);
-		CommentRepository commentRepository = new MongodbCommentRepository(mongo, dbName);
+		MongodbEntityRepository<Blog> blogRepository = new MongodbEntityRepository<Blog>(mongo, dbName, Blog.class);
+		MongodbEntityRepository<BlogEntry> blogEntryRepository = new MongodbEntityRepository<BlogEntry>(mongo, dbName, BlogEntry.class);
+		MongodbEntityRepository<Comment> commentRepository = new MongodbEntityRepository<Comment>(mongo, dbName, Comment.class);
 		
-		BlogService blogService = new BlogService(blogRepository);
-		BlogEntryService blogEntryService = new BlogEntryService(blogEntryRepository);
-		CommentService commentService = new CommentService(commentRepository);
-		
-		blogController = new BlogController(blogService);
-		blogEntryController = new BlogEntryController(blogEntryService);
-		commentController = new CommentController(commentService);
+		blogController = new BlogController(blogRepository);
+		blogEntryController = new BlogEntryController(blogEntryRepository);
+		commentController = new CommentController(commentRepository);
 	}
 
 	/**

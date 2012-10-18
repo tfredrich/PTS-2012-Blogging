@@ -6,7 +6,7 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 
 import com.kickstart.Constants;
 import com.kickstart.domain.Comment;
-import com.kickstart.service.CommentService;
+import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
 import com.strategicgains.restexpress.exception.BadRequestException;
@@ -14,15 +14,16 @@ import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
 import com.strategicgains.restexpress.query.QueryRange;
 import com.strategicgains.restexpress.util.XLinkUtils;
+import com.strategicgains.syntaxe.ValidationEngine;
 
 public class CommentController
 {
-	private CommentService commentService;
+	private MongodbEntityRepository<Comment> comments;
 	
-	public CommentController(CommentService commentService)
+	public CommentController(MongodbEntityRepository<Comment> commentRepository)
 	{
 		super();
-		this.commentService = commentService;
+		this.comments = commentRepository;
 	}
 
 	public String create(Request request, Response response)
@@ -31,14 +32,16 @@ public class CommentController
 		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "Blog ID not provided");
 		String blogEntryId = request.getUrlDecodedHeader(Constants.BLOG_ENTRY_ID_PARAMETER, "Blog Entry ID not provided");
 		comment.setBlogEntryId(blogEntryId);
-		Comment saved = commentService.create(comment);
+		ValidationEngine.validateAndThrow(comment);
+		Comment saved = comments.create(comment);
 
 		// Construct the response for create...
 		response.setResponseCreated();
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.COMMENT_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.COMMENT_ID_PARAMETER, locationUrl,
+		response.addLocationHeader(XLinkUtils.asLocationUrl(locationUrl,
+				Constants.COMMENT_ID_PARAMETER, saved.getId(),
 				Constants.BLOG_ID_PARAMETER, blogId,
 				Constants.BLOG_ENTRY_ID_PARAMETER, blogEntryId));
 
@@ -49,7 +52,7 @@ public class CommentController
 	public Comment read(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.COMMENT_ID_PARAMETER, "No Comment ID supplied");
-		return commentService.read(id);
+		return comments.read(id);
 	}
 
 	public List<Comment> readAll(Request request, Response response)
@@ -57,8 +60,8 @@ public class CommentController
 		QueryFilter filter = QueryFilter.parseFrom(request);
 		QueryOrder order = QueryOrder.parseFrom(request);
 		QueryRange range = QueryRange.parseFrom(request, 20);
-		List<Comment> results = commentService.readAll(filter, range, order);
-		response.addRangeHeader(range, commentService.count(filter));
+		List<Comment> results = comments.readAll(filter, range, order);
+		response.setCollectionResponse(range, results.size(), comments.count(filter));
 		return results;
 	}
 
@@ -72,14 +75,15 @@ public class CommentController
 			throw new BadRequestException("ID in URL and ID in Comment must match");
 		}
 		
-		commentService.update(comment);
+		ValidationEngine.validateAndThrow(comment);
+		comments.update(comment);
 		response.setResponseNoContent();
 	}
 
 	public void delete(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.COMMENT_ID_PARAMETER, "No Comment ID supplied");
-		commentService.delete(id);
+		comments.delete(id);
 		response.setResponseNoContent();
 	}
 }

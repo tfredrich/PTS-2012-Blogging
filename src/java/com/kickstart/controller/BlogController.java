@@ -6,7 +6,7 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 
 import com.kickstart.Constants;
 import com.kickstart.domain.Blog;
-import com.kickstart.service.BlogService;
+import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
 import com.strategicgains.restexpress.exception.BadRequestException;
@@ -14,21 +14,23 @@ import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
 import com.strategicgains.restexpress.query.QueryRange;
 import com.strategicgains.restexpress.util.XLinkUtils;
+import com.strategicgains.syntaxe.ValidationEngine;
 
 public class BlogController
 {
-	private BlogService blogService;
+	private MongodbEntityRepository<Blog> blogs;
 	
-	public BlogController(BlogService blogService)
+	public BlogController(MongodbEntityRepository<Blog> blogRepository)
 	{
 		super();
-		this.blogService = blogService;
+		this.blogs = blogRepository;
 	}
 
 	public String create(Request request, Response response)
 	{
 		Blog blog = request.getBodyAs(Blog.class, "Blog details not provided");
-		Blog saved = blogService.create(blog);
+		ValidationEngine.validateAndThrow(blog);
+		Blog saved = blogs.create(blog);
 
 		// Construct the response for create...
 		response.setResponseCreated();
@@ -44,7 +46,7 @@ public class BlogController
 	public Blog read(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID supplied");
-		return blogService.read(id);
+		return blogs.read(id);
 	}
 
 	public List<Blog> readAll(Request request, Response response)
@@ -52,8 +54,8 @@ public class BlogController
 		QueryFilter filter = QueryFilter.parseFrom(request);
 		QueryOrder order = QueryOrder.parseFrom(request);
 		QueryRange range = QueryRange.parseFrom(request, 20);
-		List<Blog> results = blogService.readAll(filter, range, order);
-		response.addRangeHeader(range, blogService.count(filter));
+		List<Blog> results = blogs.readAll(filter, range, order);
+		response.setCollectionResponse(range, results.size(), blogs.count(filter));
 		return results;
 	}
 
@@ -67,14 +69,15 @@ public class BlogController
 			throw new BadRequestException("ID in URL and ID in Blog must match");
 		}
 		
-		blogService.update(blog);
+		ValidationEngine.validateAndThrow(blog);
+		blogs.update(blog);
 		response.setResponseNoContent();
 	}
 
 	public void delete(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID supplied");
-		blogService.delete(id);
+		blogs.delete(id);
 		response.setResponseNoContent();
 	}
 }
