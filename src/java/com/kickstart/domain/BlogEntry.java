@@ -2,12 +2,11 @@ package com.kickstart.domain;
 
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Indexed;
-import com.strategicgains.repoexpress.mongodb.AbstractMongodbEntity;
 import com.strategicgains.syntaxe.annotation.StringValidation;
 
 @Entity("blog_entries")
 public class BlogEntry
-extends AbstractMongodbEntity
+extends AbstractLinkedEntity
 {
 	@Indexed
 	@StringValidation(name="Blog ID", required=true)

@@ -63,7 +63,8 @@ public class Main
 
 		server.uri("/blogs/{blogId}/entries.{format}", config.getBlogEntryController())
 			.action("readAll", HttpMethod.GET)
-			.method(HttpMethod.POST);
+			.method(HttpMethod.POST)
+			.name(Constants.BLOG_ENTRIES_READ_ROUTE);
 
 		server.uri("/blogs/{blogId}/entries/{entryId}.{format}", config.getBlogEntryController())
 			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
@@ -71,7 +72,8 @@ public class Main
 
 		server.uri("/blogs/{blogId}/entries/{entryId}/comments.{format}", config.getCommentController())
 			.action("readAll", HttpMethod.GET)
-			.method(HttpMethod.POST);
+			.method(HttpMethod.POST)
+			.name(Constants.COMMENTS_READ_ROUTE);
 
 		server.uri("/blogs/{blogId}/entries/{entryId}/comments/{commentId}.{format}", config.getCommentController())
 			.method(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)
@@ -87,7 +89,8 @@ public class Main
 	    	.mapException(ItemNotFoundException.class, NotFoundException.class)
 	    	.mapException(DuplicateItemException.class, ConflictException.class)
 	    	.mapException(ValidationException.class, BadRequestException.class)
-	    	.mapException(InvalidObjectIdException.class, NotFoundException.class);
+	    	.mapException(InvalidObjectIdException.class, NotFoundException.class)
+	    	.mapException(com.google.code.morphia.query.ValidationException.class, BadRequestException.class);
     }
 
 	private static Configuration loadEnvironment(String[] args)

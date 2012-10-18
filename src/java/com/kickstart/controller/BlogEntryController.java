@@ -9,6 +9,7 @@ import com.kickstart.domain.BlogEntry;
 import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
+import com.strategicgains.restexpress.domain.XLink;
 import com.strategicgains.restexpress.exception.BadRequestException;
 import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
@@ -50,7 +51,23 @@ public class BlogEntryController
 	public BlogEntry read(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.BLOG_ENTRY_ID_PARAMETER, "No BlogEntry ID supplied");
-		return blogEntries.read(id);
+		BlogEntry result = blogEntries.read(id);
+
+		// Add 'self' link
+		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
+		String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+			Constants.BLOG_ID_PARAMETER, result.getBlogId(),
+			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
+		result.addLink(new XLink("self", selfUrl));
+
+		// Add 'entries' link
+		String commentsUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.COMMENTS_READ_ROUTE);
+		String commentsUrl = XLinkUtils.asLocationUrl(commentsUrlPattern,
+			Constants.BLOG_ID_PARAMETER, result.getBlogId(),
+			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
+		result.addLink(new XLink("comments", commentsUrl));
+
+		return result;
 	}
 
 	public List<BlogEntry> readAll(Request request, Response response)
@@ -60,6 +77,18 @@ public class BlogEntryController
 		QueryRange range = QueryRange.parseFrom(request, 20);
 		List<BlogEntry> results = blogEntries.readAll(filter, range, order);
 		response.setCollectionResponse(range, results.size(), blogEntries.count(filter));
+
+		// Add 'self' links
+		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
+
+		for (BlogEntry entry : results)
+		{
+			String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+				Constants.BLOG_ID_PARAMETER, entry.getBlogId(),
+				Constants.BLOG_ENTRY_ID_PARAMETER, entry.getId());
+			entry.addLink(new XLink("self", selfUrl));
+		}
+
 		return results;
 	}
 

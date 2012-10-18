@@ -9,6 +9,7 @@ import com.kickstart.domain.Blog;
 import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
+import com.strategicgains.restexpress.domain.XLink;
 import com.strategicgains.restexpress.exception.BadRequestException;
 import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
@@ -37,7 +38,7 @@ public class BlogController
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(saved.getId(), Constants.BLOG_ID_PARAMETER, locationUrl));
+		response.addLocationHeader(XLinkUtils.asLocationUrl(locationUrl, Constants.BLOG_ID_PARAMETER, saved.getId()));
 
 		// Return the newly-created ID...
 		return saved.getId();
@@ -46,7 +47,18 @@ public class BlogController
 	public Blog read(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID supplied");
-		return blogs.read(id);
+		Blog result = blogs.read(id);
+
+		// Add 'self' link
+		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
+		String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
+		result.addLink(new XLink("self", selfUrl));
+
+		// Add 'entries' link
+		String entriesUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRIES_READ_ROUTE);
+		String entriesUrl = XLinkUtils.asLocationUrl(entriesUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
+		result.addLink(new XLink("entries", entriesUrl));
+		return result;
 	}
 
 	public List<Blog> readAll(Request request, Response response)
@@ -56,6 +68,16 @@ public class BlogController
 		QueryRange range = QueryRange.parseFrom(request, 20);
 		List<Blog> results = blogs.readAll(filter, range, order);
 		response.setCollectionResponse(range, results.size(), blogs.count(filter));
+		
+		// Add 'self' links
+		String urlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
+		
+		for (Blog blog : results)
+		{
+			String selfUrl = XLinkUtils.asLocationUrl(urlPattern, Constants.BLOG_ID_PARAMETER, blog.getId());
+			blog.addLink(new XLink("self", selfUrl));
+		}
+
 		return results;
 	}
 

@@ -9,6 +9,7 @@ import com.kickstart.domain.Comment;
 import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
+import com.strategicgains.restexpress.domain.XLink;
 import com.strategicgains.restexpress.exception.BadRequestException;
 import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
@@ -52,16 +53,47 @@ public class CommentController
 	public Comment read(Request request, Response response)
 	{
 		String id = request.getUrlDecodedHeader(Constants.COMMENT_ID_PARAMETER, "No Comment ID supplied");
-		return comments.read(id);
+		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID supplied");
+		Comment result = comments.read(id);
+
+		// Add 'self' link
+		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.COMMENT_READ_ROUTE);
+		String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+				Constants.COMMENT_ID_PARAMETER, result.getId(),
+				Constants.BLOG_ID_PARAMETER, blogId,
+				Constants.BLOG_ENTRY_ID_PARAMETER, result.getBlogEntryId());
+		result.addLink(new XLink("self", selfUrl));
+
+		String parentUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
+		String parentUrl = XLinkUtils.asLocationUrl(parentUrlPattern,
+				Constants.BLOG_ID_PARAMETER, blogId,
+				Constants.BLOG_ENTRY_ID_PARAMETER, result.getBlogEntryId());
+		result.addLink(new XLink("parent", parentUrl));
+
+		return result;
 	}
 
 	public List<Comment> readAll(Request request, Response response)
 	{
+		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "No Blog ID supplied");
 		QueryFilter filter = QueryFilter.parseFrom(request);
 		QueryOrder order = QueryOrder.parseFrom(request);
 		QueryRange range = QueryRange.parseFrom(request, 20);
 		List<Comment> results = comments.readAll(filter, range, order);
 		response.setCollectionResponse(range, results.size(), comments.count(filter));
+		
+		// Add 'self' and 'parent' links
+		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.COMMENT_READ_ROUTE);
+		
+		for (Comment comment : results)
+		{
+			String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+				Constants.COMMENT_ID_PARAMETER, comment.getId(),
+				Constants.BLOG_ID_PARAMETER, blogId,
+				Constants.BLOG_ENTRY_ID_PARAMETER, comment.getBlogEntryId());
+			comment.addLink(new XLink("self", selfUrl));
+		}
+
 		return results;
 	}
 
