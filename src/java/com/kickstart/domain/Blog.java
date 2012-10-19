@@ -5,7 +5,7 @@ import com.strategicgains.syntaxe.annotation.StringValidation;
 
 @Entity("blogs")
 public class Blog
-extends AbstractLinkedEntity
+extends AbstractLinkableEntity
 {
 	@StringValidation(name = "Blog Title", required = true)
 	private String title;
