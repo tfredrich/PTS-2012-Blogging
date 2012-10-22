@@ -58,7 +58,7 @@ public class BlogController
 		// Add 'entries' link
 		String entriesUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRIES_READ_ROUTE);
 		String entriesUrl = LinkUtils.formatUrl(entriesUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
-		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/entries", entriesUrl));
+		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/entries", entriesUrl, "This Blog's Entries"));
 		return result;
 	}
 
@@ -72,11 +72,16 @@ public class BlogController
 		
 		// Add 'self' links
 		String urlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
+		String entriesUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRIES_READ_ROUTE);
 		
 		for (Blog blog : results)
 		{
 			String selfUrl = LinkUtils.formatUrl(urlPattern, Constants.BLOG_ID_PARAMETER, blog.getId());
 			blog.addLink(new Link(RelTypes.SELF, selfUrl));
+
+			// Add 'entries' link
+			String entriesUrl = LinkUtils.formatUrl(entriesUrlPattern, Constants.BLOG_ID_PARAMETER, blog.getId());
+			blog.addLink(new Link("http://www.pearson.com/pts/2012/blogging/entries", entriesUrl, "This Blog's Entries"));
 		}
 
 		return results;

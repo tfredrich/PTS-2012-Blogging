@@ -62,12 +62,12 @@ public class BlogEntryController
 			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
 		result.addLink(new Link(RelTypes.SELF, selfUrl));
 
-		// Add 'entries' link
+		// Add 'comments' link
 		String commentsUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.COMMENTS_READ_ROUTE);
 		String commentsUrl = LinkUtils.formatUrl(commentsUrlPattern,
 			Constants.BLOG_ID_PARAMETER, result.getBlogId(),
 			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
-		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/comments", commentsUrl));
+		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/comments", commentsUrl, "This Blog-Entries Comments"));
 
 		return result;
 	}
@@ -98,7 +98,7 @@ public class BlogEntryController
 		LinkableCollection<BlogEntry> wrapper = new LinkableCollection<BlogEntry>(results);
 		String parentUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
 		String parentUrl = LinkUtils.formatUrl(parentUrlPattern, Constants.BLOG_ID_PARAMETER, blogId);
-		wrapper.addLink(new Link(RelTypes.UP, parentUrl));
+		wrapper.addLink(new Link(RelTypes.UP, parentUrl, "The Parent Blog (of these entries)"));
 		return wrapper;
 	}
 

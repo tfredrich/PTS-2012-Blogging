@@ -70,7 +70,7 @@ public class CommentController
 		String parentUrl = LinkUtils.formatUrl(parentUrlPattern,
 				Constants.BLOG_ID_PARAMETER, blogId,
 				Constants.BLOG_ENTRY_ID_PARAMETER, result.getBlogEntryId());
-		result.addLink(new Link(RelTypes.UP, parentUrl));
+		result.addLink(new Link(RelTypes.UP, parentUrl, "The Parent Blog-Entry"));
 
 		return result;
 	}
@@ -105,7 +105,7 @@ public class CommentController
 		String parentUrl = LinkUtils.formatUrl(parentUrlPattern,
 			Constants.BLOG_ID_PARAMETER, blogId,
 			Constants.BLOG_ENTRY_ID_PARAMETER, blogEntryId);
-		wrapper.addLink(new Link(RelTypes.UP, parentUrl));
+		wrapper.addLink(new Link(RelTypes.UP, parentUrl, "The Parent Blog-Entry"));
 		return wrapper;
 	}
 
