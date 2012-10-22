@@ -6,15 +6,16 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 
 import com.kickstart.Constants;
 import com.kickstart.domain.Blog;
+import com.strategicgains.hyperexpress.RelTypes;
+import com.strategicgains.hyperexpress.domain.Link;
+import com.strategicgains.hyperexpress.util.LinkUtils;
 import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
-import com.strategicgains.restexpress.domain.XLink;
 import com.strategicgains.restexpress.exception.BadRequestException;
 import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
 import com.strategicgains.restexpress.query.QueryRange;
-import com.strategicgains.restexpress.util.XLinkUtils;
 import com.strategicgains.syntaxe.ValidationEngine;
 
 public class BlogController
@@ -38,7 +39,7 @@ public class BlogController
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(locationUrl, Constants.BLOG_ID_PARAMETER, saved.getId()));
+		response.addLocationHeader(LinkUtils.formatUrl(locationUrl, Constants.BLOG_ID_PARAMETER, saved.getId()));
 
 		// Return the newly-created ID...
 		return saved.getId();
@@ -51,13 +52,13 @@ public class BlogController
 
 		// Add 'self' link
 		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
-		String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
-		result.addLink(new XLink("self", selfUrl));
+		String selfUrl = LinkUtils.formatUrl(selfUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
+		result.addLink(new Link(RelTypes.SELF, selfUrl));
 
 		// Add 'entries' link
 		String entriesUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRIES_READ_ROUTE);
-		String entriesUrl = XLinkUtils.asLocationUrl(entriesUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
-		result.addLink(new XLink("entries", entriesUrl));
+		String entriesUrl = LinkUtils.formatUrl(entriesUrlPattern, Constants.BLOG_ID_PARAMETER, result.getId());
+		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/entries", entriesUrl));
 		return result;
 	}
 
@@ -74,8 +75,8 @@ public class BlogController
 		
 		for (Blog blog : results)
 		{
-			String selfUrl = XLinkUtils.asLocationUrl(urlPattern, Constants.BLOG_ID_PARAMETER, blog.getId());
-			blog.addLink(new XLink("self", selfUrl));
+			String selfUrl = LinkUtils.formatUrl(urlPattern, Constants.BLOG_ID_PARAMETER, blog.getId());
+			blog.addLink(new Link(RelTypes.SELF, selfUrl));
 		}
 
 		return results;

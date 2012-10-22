@@ -6,15 +6,17 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 
 import com.kickstart.Constants;
 import com.kickstart.domain.BlogEntry;
+import com.strategicgains.hyperexpress.RelTypes;
+import com.strategicgains.hyperexpress.domain.Link;
+import com.strategicgains.hyperexpress.domain.LinkableCollection;
+import com.strategicgains.hyperexpress.util.LinkUtils;
 import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 import com.strategicgains.restexpress.Request;
 import com.strategicgains.restexpress.Response;
-import com.strategicgains.restexpress.domain.XLink;
 import com.strategicgains.restexpress.exception.BadRequestException;
 import com.strategicgains.restexpress.query.QueryFilter;
 import com.strategicgains.restexpress.query.QueryOrder;
 import com.strategicgains.restexpress.query.QueryRange;
-import com.strategicgains.restexpress.util.XLinkUtils;
 import com.strategicgains.syntaxe.ValidationEngine;
 
 public class BlogEntryController
@@ -40,7 +42,7 @@ public class BlogEntryController
 
 		// Include the Location header...
 		String locationUrl = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
-		response.addLocationHeader(XLinkUtils.asLocationUrl(locationUrl,
+		response.addLocationHeader(LinkUtils.formatUrl(locationUrl,
 				Constants.BLOG_ENTRY_ID_PARAMETER, saved.getId(),
 				Constants.BLOG_ID_PARAMETER, blogId));
 
@@ -55,26 +57,29 @@ public class BlogEntryController
 
 		// Add 'self' link
 		String selfUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_ENTRY_READ_ROUTE);
-		String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+		String selfUrl = LinkUtils.formatUrl(selfUrlPattern,
 			Constants.BLOG_ID_PARAMETER, result.getBlogId(),
 			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
-		result.addLink(new XLink("self", selfUrl));
+		result.addLink(new Link(RelTypes.SELF, selfUrl));
 
 		// Add 'entries' link
 		String commentsUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.COMMENTS_READ_ROUTE);
-		String commentsUrl = XLinkUtils.asLocationUrl(commentsUrlPattern,
+		String commentsUrl = LinkUtils.formatUrl(commentsUrlPattern,
 			Constants.BLOG_ID_PARAMETER, result.getBlogId(),
 			Constants.BLOG_ENTRY_ID_PARAMETER, result.getId());
-		result.addLink(new XLink("comments", commentsUrl));
+		result.addLink(new Link("http://www.pearson.com/pts/2012/blogging/comments", commentsUrl));
 
 		return result;
 	}
 
-	public List<BlogEntry> readAll(Request request, Response response)
+	public LinkableCollection<BlogEntry> readAll(Request request, Response response)
 	{
+		String blogId = request.getUrlDecodedHeader(Constants.BLOG_ID_PARAMETER, "Blog ID not provided");
 		QueryFilter filter = QueryFilter.parseFrom(request);
 		QueryOrder order = QueryOrder.parseFrom(request);
 		QueryRange range = QueryRange.parseFrom(request, 20);
+
+		filter.addCriteria("blogId", blogId);
 		List<BlogEntry> results = blogEntries.readAll(filter, range, order);
 		response.setCollectionResponse(range, results.size(), blogEntries.count(filter));
 
@@ -83,13 +88,18 @@ public class BlogEntryController
 
 		for (BlogEntry entry : results)
 		{
-			String selfUrl = XLinkUtils.asLocationUrl(selfUrlPattern,
+			String selfUrl = LinkUtils.formatUrl(selfUrlPattern,
 				Constants.BLOG_ID_PARAMETER, entry.getBlogId(),
 				Constants.BLOG_ENTRY_ID_PARAMETER, entry.getId());
-			entry.addLink(new XLink("self", selfUrl));
+			entry.addLink(new Link(RelTypes.SELF, selfUrl));
 		}
 
-		return results;
+		// Add 'parent' link to the collection
+		LinkableCollection<BlogEntry> wrapper = new LinkableCollection<BlogEntry>(results);
+		String parentUrlPattern = request.getNamedUrl(HttpMethod.GET, Constants.BLOG_READ_ROUTE);
+		String parentUrl = LinkUtils.formatUrl(parentUrlPattern, Constants.BLOG_ID_PARAMETER, blogId);
+		wrapper.addLink(new Link(RelTypes.UP, parentUrl));
+		return wrapper;
 	}
 
 	public void update(Request request, Response response)
