@@ -1,7 +1,5 @@
 package com.kickstart.persistence;
 
-import java.util.List;
-
 import com.google.code.morphia.query.Query;
 import com.kickstart.domain.BlogEntry;
 import com.mongodb.Mongo;
@@ -25,7 +23,6 @@ extends BaseBloggingRepository<BlogEntry>
 	public void deleteByBlogId(String blogId)
 	{
 		Query<BlogEntry> blogEntries = getDataStore().createQuery(BlogEntry.class).field("blogId").equal(blogId);
-		List<BlogEntry> l = blogEntries.asList();
 		getDataStore().delete(blogEntries);
 	}
 }

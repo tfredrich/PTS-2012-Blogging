@@ -7,6 +7,7 @@ import com.strategicgains.repoexpress.mongodb.MongodbEntityRepository;
 public class BaseBloggingRepository<T extends AbstractMongodbEntity>
 extends MongodbEntityRepository<T>
 {
+	@SafeVarargs
 	public BaseBloggingRepository(Mongo mongo, String databaseName, Class<T>... types)
 	{
 		super(mongo, databaseName, types);
